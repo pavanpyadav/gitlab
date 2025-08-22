@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Deploy Static Website
 
 on:
   push:
@@ -6,50 +6,28 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     permissions:
-      id-token: write    # ✅ Needed for OIDC
-      contents: read     # ✅ To checkout code
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 16
-        uses: actions/setup-node@v4
-        with:
-          node-version: 16
-
-      - name: Install AWS CLI
-        run: pip install awscli
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm install --force
-
-      - name: Update Angular CLI
-        run: |
-          git stash
-          npx ng update @angular/cli@16
-
-      - name: Build Angular app
-        working-directory: frontend
-        run: npx ng build
-
-      # ✅ OIDC authentication (no secrets required)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::546821226186:role/github-action-oidc
           aws-region: ap-south-1
 
-      - name: Deploy to AWS S3
+      - name: Deploy static files to S3
         run: |
           aws s3 rm s3://d-f-dev.wagholi.co/ --recursive
-          aws s3 cp dist/d-f/ s3://d-f-dev.wagholi.co/ --recursive
-
+          aws s3 cp . s3://d-f-dev.wagholi.co/ --recursive --exclude ".git/*" --exclude ".github/*"
+          
       - name: Create CloudFront Invalidation
         run: |
           aws cloudfront create-invalidation \
