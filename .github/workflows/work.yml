@@ -1,35 +1,24 @@
-name: Deploy Static Website
+name: Test OIDC Authentication
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:   # ✅ Manually trigger this workflow from GitHub Actions tab
 
 jobs:
-  deploy:
+  oidc-test:
     runs-on: ubuntu-latest
-
     permissions:
-      id-token: write
+      id-token: write   # ✅ Required for OIDC
       contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::546821226186:role/github-action-oidc
           aws-region: ap-south-1
 
-      - name: Deploy static files to S3
-        run: |
-          aws s3 rm s3://d-f-dev.wagholi.co/ --recursive
-          aws s3 cp . s3://d-f-dev.wagholi.co/ --recursive --exclude ".git/*" --exclude ".github/*"
-          
-      - name: Create CloudFront Invalidation
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id XXXX111 \
-            --paths '/*'
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
