@@ -1,7 +1,7 @@
 name: Test OIDC Authentication
 
 on:
-  workflow_dispatch:   # ✅ Manually trigger this workflow from GitHub Actions tab
+  workflow_dispatch:   # ✅ Manually trigger this workflow from GitHub Actions 
 
 jobs:
   oidc-test:
